@@ -45,9 +45,11 @@ class SnakeGame:
         self.w = w
         self.h = h
         # init display
-        #!IMPORTANTE -- Descomentar abajo para UI
-        #self.display = pygame.display.set_mode((self.w, self.h))
-        #pygame.display.set_caption("Snake")
+
+        if(const.HAY_INTERFAZ):
+            self.display = pygame.display.set_mode((self.w, self.h))
+            pygame.display.set_caption("Snake")
+
         self.clock = pygame.time.Clock()
 
         # init game state
@@ -105,8 +107,8 @@ class SnakeGame:
             self.snake.pop()
 
         # 5. update ui and clock
-        #!IMPORTANTE -- Descomentar abajo para UI
-        #self._update_ui()
+        if(const.HAY_INTERFAZ):
+            self._update_ui()
         self.clock.tick(SPEED)
         # 6. return game over and score
         return game_over, self.score
