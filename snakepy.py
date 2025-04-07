@@ -11,8 +11,8 @@ from func_geneticos import fitness, distancia_manhattan
 import numpy as np
 import time
 
-
-
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 pygame.init()
 # font = pygame.font.Font("arial.ttf", 25)
@@ -201,7 +201,7 @@ class SnakeGame:
 
         self.head = Point(x, y)
 
-def jugar():
+def jugar(num_individuo):
 
     game = SnakeGame(const.ANCHO_PANTALLA, const.ALTO_PANTALLA)
 
@@ -213,6 +213,8 @@ def jugar():
 
     # game loop
     while True:
+        
+        # print(f"agente {num_individuo} - posicion actual {game.head}")
 
         head_columna, head_fila = (int(game.head.x), int(game.head.y))
         head_columna = head_columna // const.TAMANNO_BLOQUE
@@ -233,8 +235,6 @@ def jugar():
         distancia_manzana = int(distancia_manhattan(game.head, game.food)) // const.TAMANNO_BLOQUE - 1            
         # Obtener el score
         score = game.score
-        if distancia_manzana == 0:
-            score += 1
 
         cromosoma = [distancia_manzana, distancia_pared, score, direccion.value]
         individuo.append(cromosoma)
@@ -258,7 +258,7 @@ def jugar():
         "fitness": fitness(individuo)
     }
     
-    print("Termine el juego")
+    # print(f"Agente {num_individuo} terminó el juego")
     pygame.quit()
     return resultados
 

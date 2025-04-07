@@ -1,34 +1,28 @@
-import threading
+from multiprocessing import Pool
 import constantes as const
 from snakepy import jugar
 
 
+def jugar_con_resultado(indice):
+    # Asumimos que `jugar(indice)` retorna un diccionario con 'individuo', 'duracion' y 'fitness'
+    return (indice, jugar(indice))
+
+
 def main():
-    # Iniciar los hilos del juego
-    hilos = []
-    resultados = [None] * const.CANTIDAD_AGENTES
+    print("Iniciando los procesos del juego...")
 
-    def jugar_con_resultado(indice):
-        resultados[indice] = jugar()
+    with Pool(processes=const.CANTIDAD_AGENTES) as pool:
+        resultados = pool.map(jugar_con_resultado, range(const.CANTIDAD_AGENTES))
 
-    for i in range(const.CANTIDAD_AGENTES):
-        hilo = threading.Thread(target=jugar_con_resultado, args=(i,))
-        hilos.append(hilo)
-        hilo.start()
-    print("Iniciando los hilos del juego...")
+    print("Todos los procesos han terminado.")
 
-    # Esperar a que todos los hilos terminen
-    for hilo in hilos:
-        hilo.join()
-
-    print("Todos los hilos han terminado.")
     # Procesar los resultados
-    for i, resultado in enumerate(resultados):
-        print(f"Agente {i}:")
+    for indice, resultado in resultados:
+        print(f"Agente {indice}:")
         print(f"  Individuo: {resultado['individuo']}")
         print(f"  Duración: {resultado['duracion']}")
         print(f"  Fitness: {resultado['fitness']}")
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     main()
