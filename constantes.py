@@ -3,7 +3,7 @@ ANCHO_PANTALLA = 640
 ALTO_PANTALLA  = 480
 VELOCIDAD = 6
 TAMANNO_BLOQUE = 80 # Sirve bien con 20, 40, 80
-HAY_INTERFAZ = True  #! Poner en True para ver la interfaz
+HAY_INTERFAZ = False  #! Poner en True para ver la interfaz
 JUEGO_MANUAL = False  #! Poner en True para jugar manualmente
 OBJETIVO_MANZANAS = 10  # Número de manzanas a comer para ganar
 

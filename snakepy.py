@@ -38,9 +38,6 @@ BLACK = (0, 0, 0)
 BLOCK_SIZE =  const.TAMANNO_BLOQUE
 SPEED = const.VELOCIDAD
 
-
-
-
 class SnakeGame:
 
     def __init__(self, w=640, h=480):
@@ -204,8 +201,7 @@ class SnakeGame:
 
         self.head = Point(x, y)
 
-
-if __name__ == "__main__":
+def jugar():
 
     game = SnakeGame(const.ANCHO_PANTALLA, const.ALTO_PANTALLA)
 
@@ -213,7 +209,6 @@ if __name__ == "__main__":
     columnas = const.ANCHO_PANTALLA // const.TAMANNO_BLOQUE
     individuo = []
 
-    print(filas, columnas)
     start = time.time()
 
     # game loop
@@ -256,14 +251,16 @@ if __name__ == "__main__":
     
     individuo = np.array(individuo, dtype=int)
 
+    # Retornar resultados
+    resultados = {
+        "individuo": individuo,
+        "duracion": end - start,
+        "fitness": fitness(individuo)
+    }
     
-    print("Final Score", score)
-    print("Individuo:")
-    pprint.pprint(individuo, width=80, indent=4)
-    print("Cantidad de movimientos:", individuo.shape[0])
-    print("Duración del juego:", end - start)
-    print("Fitness:", fitness(individuo))
+    print("Termine el juego")
     pygame.quit()
+    return resultados
 
 '''
 [ distancia_manzana, distancia_pared, score, accion ]
