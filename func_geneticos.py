@@ -12,7 +12,7 @@ def fitness(individuo):
     dist_pared = individuo[:, 1]
     score = individuo[:, 2]
 
-    n = len(individuo)                          # duración del individuo
+    n = len(individuo)                     # duración del individuo
     score_total = np.sum(score)            # total manzanas comidas
     max_duracion = 100                     # valor que defines tú
 
@@ -27,4 +27,4 @@ def fitness(individuo):
 
 
 def distancia_manhattan(p1, p2):
-    return abs(p1.x - p2.x) + abs(p1.y - p2.y)
+    return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])

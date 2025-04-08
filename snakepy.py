@@ -43,6 +43,9 @@ class SnakeGame:
     def __init__(self, w=640, h=480):
         self.w = w
         self.h = h
+        self.individuo = []
+        self.filas = const.ALTO_PANTALLA // const.TAMANNO_BLOQUE
+        self.columnas = const.ANCHO_PANTALLA // const.TAMANNO_BLOQUE
         # init display
 
         if(const.HAY_INTERFAZ):
@@ -94,6 +97,30 @@ class SnakeGame:
         self._move(self.direction)  # update the head
         self.snake.insert(0, self.head)
 
+        head_columna, head_fila = (int(self.head.x), int(self.head.y))
+        head_columna = head_columna // const.TAMANNO_BLOQUE
+        head_fila = head_fila // const.TAMANNO_BLOQUE
+        direccion = self.direction
+        # (fila, columna)
+        cabeza = (head_fila, head_columna)
+        manzana = (int(self.food.y) // const.TAMANNO_BLOQUE, int(self.food.x) // const.TAMANNO_BLOQUE)
+
+        # Obtener distancia a la pared de la dirección de la cabeza
+        match direccion:
+            case Direction.RIGHT:
+                distancia_pared = self.columnas - head_columna - 1
+            case Direction.LEFT:
+                distancia_pared = head_columna
+            case Direction.UP:
+                distancia_pared = head_fila
+            case Direction.DOWN:
+                distancia_pared = self.filas - head_fila - 1
+        
+        
+        # Obtiene la distancia a la manzana pero utiliza la distancia tomando en cuenta el cuadrado completo
+        distancia_manzana = distancia_manhattan(cabeza, manzana)
+        print(f"cabeza {cabeza} - manzana {manzana} - distancia_manhattan {distancia_manzana}")
+
         # 3. check if game over
         game_over = False
         if self._is_collision():
@@ -106,6 +133,10 @@ class SnakeGame:
             self._place_food()
         else:
             self.snake.pop()
+        
+        # 5. Se agrega el score actualizado
+        cromosoma = [distancia_manzana, distancia_pared, self.score, direccion.value]
+        self.individuo.append(cromosoma)
 
         # 5. update ui and clock
         if(const.HAY_INTERFAZ):
@@ -137,6 +168,30 @@ class SnakeGame:
         self._move(self.direction)  # update the head
         self.snake.insert(0, self.head)
 
+        head_columna, head_fila = (int(self.head.x), int(self.head.y))
+        head_columna = head_columna // const.TAMANNO_BLOQUE
+        head_fila = head_fila // const.TAMANNO_BLOQUE
+        direccion = self.direction
+        # (fila, columna)
+        cabeza = (head_fila, head_columna)
+        manzana = (int(self.food.y) // const.TAMANNO_BLOQUE, int(self.food.x) // const.TAMANNO_BLOQUE)
+
+        # Obtener distancia a la pared de la dirección de la cabeza
+        match direccion:
+            case Direction.RIGHT:
+                distancia_pared = self.columnas - head_columna - 1
+            case Direction.LEFT:
+                distancia_pared = head_columna
+            case Direction.UP:
+                distancia_pared = head_fila
+            case Direction.DOWN:
+                distancia_pared = self.filas - head_fila - 1
+        
+        
+        # Obtiene la distancia a la manzana pero utiliza la distancia tomando en cuenta el cuadrado completo
+        distancia_manzana = distancia_manhattan(cabeza, manzana)
+        print(f"cabeza {cabeza} - manzana {manzana} - distancia_manhattan {distancia_manzana}")
+
         # 3. check if game over
         game_over = False
         if self._is_collision():
@@ -149,6 +204,10 @@ class SnakeGame:
             self._place_food()
         else:
             self.snake.pop()
+        
+        # 5. Se agrega el score actualizado
+        cromosoma = [distancia_manzana, distancia_pared, self.score, direccion.value]
+        self.individuo.append(cromosoma)
 
         # 5. update ui and clock
         if(const.HAY_INTERFAZ):
@@ -205,52 +264,22 @@ def jugar(num_individuo):
 
     game = SnakeGame(const.ANCHO_PANTALLA, const.ALTO_PANTALLA)
 
-    filas = const.ALTO_PANTALLA // const.TAMANNO_BLOQUE
-    columnas = const.ANCHO_PANTALLA // const.TAMANNO_BLOQUE
-    individuo = []
-
     start = time.time()
 
     # game loop
     while True:
-        
-        # print(f"agente {num_individuo} - posicion actual {game.head}")
-
-        head_columna, head_fila = (int(game.head.x), int(game.head.y))
-        head_columna = head_columna // const.TAMANNO_BLOQUE
-        head_fila = head_fila // const.TAMANNO_BLOQUE
-        direccion = game.direction
-
-        # Obtener distancia a la pared de la dirección de la cabeza
-        match direccion:
-            case Direction.RIGHT:
-                distancia_pared = columnas - head_columna - 1
-            case Direction.LEFT:
-                distancia_pared = head_columna
-            case Direction.UP:
-                distancia_pared = head_fila
-            case Direction.DOWN:
-                distancia_pared = filas - head_fila - 1
-        
-        distancia_manzana = int(distancia_manhattan(game.head, game.food)) // const.TAMANNO_BLOQUE - 1            
-        # Obtener el score
-        score = game.score
-
-        cromosoma = [distancia_manzana, distancia_pared, score, direccion.value]
-        individuo.append(cromosoma)
-
         if(const.JUEGO_MANUAL):
             game_over, score = game.play_step_manual()
         else:
             game_over, score = game.play_step_automatico()
+
+        
             
         if game_over == True:
             end = time.time()
             break
-            
-    
-    individuo = np.array(individuo, dtype=int)
 
+    individuo = np.array(game.individuo, dtype=int)
     # Retornar resultados
     resultados = {
         "individuo": individuo,
@@ -261,6 +290,8 @@ def jugar(num_individuo):
     # print(f"Agente {num_individuo} terminó el juego")
     pygame.quit()
     return resultados
+
+
 
 '''
 [ distancia_manzana, distancia_pared, score, accion ]
@@ -275,3 +306,6 @@ def jugar(num_individuo):
 '''
 
 
+if __name__ == "__main__":
+    print("Iniciando juego...")
+    print(jugar(1))
