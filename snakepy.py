@@ -94,6 +94,14 @@ class SnakeGame:
 
 
         # 2. move
+        # Antes de mover, guardamos los valores de la cabeza y la dirección
+        head_columna, head_fila = (int(self.head.x), int(self.head.y))
+        head_columna = head_columna // const.TAMANNO_BLOQUE
+        head_fila = head_fila // const.TAMANNO_BLOQUE
+        direccion_antes = self.direction
+        # (fila, columna)
+        cabeza_antes = (head_fila, head_columna)
+
         self._move(self.direction)  # update the head
         self.snake.insert(0, self.head)
 
@@ -119,7 +127,6 @@ class SnakeGame:
         
         # Obtiene la distancia a la manzana pero utiliza la distancia tomando en cuenta el cuadrado completo
         distancia_manzana = distancia_manhattan(cabeza, manzana)
-        print(f"cabeza {cabeza} - manzana {manzana} - distancia_manhattan {distancia_manzana}")
 
         # 3. check if game over
         game_over = False
@@ -135,7 +142,7 @@ class SnakeGame:
             self.snake.pop()
         
         # 5. Se agrega el score actualizado
-        cromosoma = [distancia_manzana, distancia_pared, self.score, direccion.value]
+        cromosoma = [cabeza_antes[0], cabeza_antes[1], direccion_antes.value,distancia_manzana, distancia_pared, self.score, direccion.value]
         self.individuo.append(cromosoma)
 
         # 5. update ui and clock
@@ -190,8 +197,6 @@ class SnakeGame:
         
         # Obtiene la distancia a la manzana pero utiliza la distancia tomando en cuenta el cuadrado completo
         distancia_manzana = distancia_manhattan(cabeza, manzana)
-        print(f"cabeza {cabeza} - manzana {manzana} - distancia_manhattan {distancia_manzana}")
-
         # 3. check if game over
         game_over = False
         if self._is_collision():
@@ -281,11 +286,7 @@ def jugar(num_individuo):
 
     individuo = np.array(game.individuo, dtype=int)
     # Retornar resultados
-    resultados = {
-        "individuo": individuo,
-        "duracion": end - start,
-        "fitness": fitness(individuo)
-    }
+    resultados = [individuo, end - start, fitness(individuo)]
     
     # print(f"Agente {num_individuo} terminó el juego")
     pygame.quit()
@@ -308,4 +309,5 @@ def jugar(num_individuo):
 
 if __name__ == "__main__":
     print("Iniciando juego...")
+    
     print(jugar(1))

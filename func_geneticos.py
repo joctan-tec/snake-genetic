@@ -1,5 +1,6 @@
 import constantes as const
 import numpy as np
+import h5py
 
 def fitness(individuo):
     """
@@ -8,9 +9,9 @@ def fitness(individuo):
     """
     # Separar columnas para mayor claridad (opcional)
     # Variables
-    dist_manzana = individuo[:, 0]
-    dist_pared = individuo[:, 1]
-    score = individuo[:, 2]
+    dist_manzana = individuo[:, 3]
+    dist_pared = individuo[:, 4]
+    score = individuo[:, 5]
 
     n = len(individuo)                     # duración del individuo
     score_total = np.sum(score)            # total manzanas comidas
@@ -24,6 +25,17 @@ def fitness(individuo):
     )
 
     return fitness
+
+def guardar_matriz(individuo, nombre_archivo="matriz_decision.txt"):
+    with h5py.File(nombre_archivo, "w") as f:
+        # Guardar la matriz como un dataset
+        f.create_dataset(nombre_archivo, data=individuo)
+
+def leer_matriz(nombre_archivo="matriz_decision.txt"):
+    with h5py.File(nombre_archivo, "r") as f:
+        # Leer el dataset y convertirlo a un array de numpy
+        matriz = np.array(f[nombre_archivo])
+    return matriz
 
 
 def distancia_manhattan(p1, p2):

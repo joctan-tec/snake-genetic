@@ -17,11 +17,8 @@ def main():
     print("Todos los procesos han terminado.")
 
     # Procesar los resultados
-    for indice, resultado in resultados:
-        print(f"Agente {indice}:")
-        print(f"  Individuo: {resultado['individuo']}")
-        print(f"  Duración: {resultado['duracion']}")
-        print(f"  Fitness: {resultado['fitness']}")
+    for i in resultados:
+        print(i)
 
 
 if __name__ == "__main__":
