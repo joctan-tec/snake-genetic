@@ -56,8 +56,8 @@ def cruce_concatenado(padres):
     # Tomar una fracción de cada uno (por ejemplo, 1/n de cada uno)
     hijo = []
     for seq in secuencias:
-        n_bloque = max(1, len(seq) // total_padres)
-        hijo.extend(seq[:n_bloque])
+        # n_bloque = max(1, len(seq) // total_padres)
+        hijo.extend(seq)
 
     return np.array(hijo)
 

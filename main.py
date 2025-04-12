@@ -3,6 +3,7 @@ import constantes as const
 from snakepy import jugar
 from func_geneticos import seleccion_por_ranking, cruce_concatenado, guardar_matriz, leer_matriz, fusionar_matrices, mutar_movimientos
 import numpy as np
+import matplotlib.pyplot as plt
 
 FITNESS_PROMEDIO_GENERACION = []
 MEJOR_FITNESS_GENERACION = []
@@ -57,8 +58,9 @@ def main():
         # Paso 3: Seleccionar k individuos
         # Ejemplo: seleccionar 2 padres
         k=int(N*const.PORCENTAJE_SELECCION)
-        padres = seleccion_por_ranking(ordenados, ranking_probabilidades, k)
-        padres = sorted(padres, key=lambda x: x[1][2], reverse=True)
+        # padres = seleccion_por_ranking(ordenados, ranking_probabilidades, k)
+        # padres = sorted(padres, key=lambda x: x[1][2], reverse=True)
+        padres = ordenados[:k]
         mejor_fitness_seleccion = padres[0][1][2]
         fitness_promedio_seleccion = sum([x[1][2] for x in padres]) / k
         MEJOR_FITNESS_SELECCION.append(mejor_fitness_seleccion)
@@ -79,6 +81,25 @@ def main():
         guardar_matriz(matriz_final)
 
     print(leer_matriz())
+    print(leer_matriz().shape)
+
+    # Imprimir individuo con el score más alto en la matriz de decisiones
+    mejor_individuo = max([x[5] for x in matriz_decisiones])
+    print(mejor_individuo)
+
+
+    # Graficar resultados
+    plt.plot(FITNESS_PROMEDIO_GENERACION, label='Promedio Generación')
+    plt.plot(MEJOR_FITNESS_GENERACION, label='Mejor Generación')
+    plt.plot(FITNESS_PROMEDIO_SELECCION, label='Promedio Selección')
+    plt.plot(MEJOR_FITNESS_SELECCION, label='Mejor Selección')
+    plt.xlabel('Generación')
+    plt.ylabel('Fitness')
+    plt.title('Evolución del Fitness')
+    plt.legend()
+    plt.grid()
+    plt.show()
+
 
     
 

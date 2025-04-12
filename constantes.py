@@ -8,8 +8,8 @@ JUEGO_MANUAL = False  #! Poner en True para jugar manualmente
 OBJETIVO_MANZANAS = 10  # Número de manzanas a comer para ganar
 
 # Parámetros algoritmo genetico
-CANTIDAD_AGENTES = 20
-CANTIDAD_GENERACIONES = 3
+CANTIDAD_AGENTES = 50
+CANTIDAD_GENERACIONES = 5000
 PORCENTAJE_SELECCION = 0.2
 TASA_MUTACION = 0.1
 
