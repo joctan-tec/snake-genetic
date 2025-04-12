@@ -7,7 +7,7 @@ import pprint
 
 import pygame
 import constantes as const
-from func_geneticos import fitness, distancia_manhattan
+from func_geneticos import fitness, distancia_manhattan, leer_matriz
 import numpy as np
 import time
 
@@ -40,12 +40,13 @@ SPEED = const.VELOCIDAD
 
 class SnakeGame:
 
-    def __init__(self, w=640, h=480):
+    def __init__(self, matriz_decisiones, w=640, h=480):
         self.w = w
         self.h = h
         self.individuo = []
         self.filas = const.ALTO_PANTALLA // const.TAMANNO_BLOQUE
         self.columnas = const.ANCHO_PANTALLA // const.TAMANNO_BLOQUE
+        self.matriz_decisiones = matriz_decisiones
         # init display
 
         if(const.HAY_INTERFAZ):
@@ -76,44 +77,70 @@ class SnakeGame:
             self._place_food()
 
     def play_step_automatico(self):
-        # 1. collect user input
-        
-        numero_aleatorio = random.randint(0, 100)
-        if numero_aleatorio < 25:
-            if self.direction != Direction.LEFT:
-                self.direction = Direction.RIGHT
-        elif numero_aleatorio < 50:
-            if self.direction != Direction.RIGHT:
-                self.direction = Direction.LEFT
-        elif numero_aleatorio < 75:
-            if self.direction != Direction.DOWN:
-                self.direction = Direction.UP
-        elif numero_aleatorio < 100:
-            if self.direction != Direction.UP:
-                self.direction = Direction.DOWN
-
-
-        # 2. move
-        # Antes de mover, guardamos los valores de la cabeza y la dirección
+        # 1. Obtener posición y dirección actual
         head_columna, head_fila = (int(self.head.x), int(self.head.y))
         head_columna = head_columna // const.TAMANNO_BLOQUE
         head_fila = head_fila // const.TAMANNO_BLOQUE
         direccion_antes = self.direction
-        # (fila, columna)
         cabeza_antes = (head_fila, head_columna)
 
+        # 2. Calcular distancia a la manzana y distancia a la pared en la dirección actual
+        manzana = (int(self.food.y) // const.TAMANNO_BLOQUE, int(self.food.x) // const.TAMANNO_BLOQUE)
+        cabeza = (head_fila, head_columna)
+
+        match self.direction:
+            case Direction.RIGHT:
+                distancia_pared = self.columnas - head_columna - 1
+            case Direction.LEFT:
+                distancia_pared = head_columna
+            case Direction.UP:
+                distancia_pared = head_fila
+            case Direction.DOWN:
+                distancia_pared = self.filas - head_fila - 1
+
+        distancia_manzana = distancia_manhattan(cabeza, manzana)
+
+        # 3. Buscar coincidencia en matriz_decisiones
+        estado_actual = np.array([head_fila, head_columna, self.direction.value, distancia_manzana, distancia_pared])
+        coincidencia = None
+        for fila in self.matriz_decisiones:
+            fila_estado = fila[:5]  # comparar solo los primeros 5 valores
+            if np.array_equal(estado_actual, fila_estado):
+                coincidencia = fila
+                break
+
+        # 4. Elegir dirección basada en coincidencia o aleatoriamente
+        if coincidencia is not None:
+            direccion_elegida_valor = int(coincidencia[6])
+            self.direction = Direction(direccion_elegida_valor)
+            if(const.HAY_INTERFAZ):
+                print(f"encontré coincidencia en la tabla")
+        else:
+            numero_aleatorio = random.randint(0, 100)
+            if numero_aleatorio < 25:
+                if self.direction != Direction.LEFT:
+                    self.direction = Direction.RIGHT
+            elif numero_aleatorio < 50:
+                if self.direction != Direction.RIGHT:
+                    self.direction = Direction.LEFT
+            elif numero_aleatorio < 75:
+                if self.direction != Direction.DOWN:
+                    self.direction = Direction.UP
+            else:
+                if self.direction != Direction.UP:
+                    self.direction = Direction.DOWN
+
+        # 5. Mover
         self._move(self.direction)  # update the head
         self.snake.insert(0, self.head)
 
+        # 6. Recalcular posición/datos después del movimiento
         head_columna, head_fila = (int(self.head.x), int(self.head.y))
         head_columna = head_columna // const.TAMANNO_BLOQUE
         head_fila = head_fila // const.TAMANNO_BLOQUE
         direccion = self.direction
-        # (fila, columna)
         cabeza = (head_fila, head_columna)
-        manzana = (int(self.food.y) // const.TAMANNO_BLOQUE, int(self.food.x) // const.TAMANNO_BLOQUE)
 
-        # Obtener distancia a la pared de la dirección de la cabeza
         match direccion:
             case Direction.RIGHT:
                 distancia_pared = self.columnas - head_columna - 1
@@ -123,34 +150,33 @@ class SnakeGame:
                 distancia_pared = head_fila
             case Direction.DOWN:
                 distancia_pared = self.filas - head_fila - 1
-        
-        
-        # Obtiene la distancia a la manzana pero utiliza la distancia tomando en cuenta el cuadrado completo
+
         distancia_manzana = distancia_manhattan(cabeza, manzana)
 
-        # 3. check if game over
+        # 7. Revisar colisión
         game_over = False
         if self._is_collision():
             game_over = True
             return game_over, self.score
 
-        # 4. place new food or just move
+        # 8. Comida
         if self.head == self.food:
             self.score += 1
             self._place_food()
         else:
             self.snake.pop()
-        
-        # 5. Se agrega el score actualizado
-        cromosoma = [cabeza_antes[0], cabeza_antes[1], direccion_antes.value,distancia_manzana, distancia_pared, self.score, direccion.value]
+
+        # 9. Registrar cromosoma
+        cromosoma = [cabeza_antes[0], cabeza_antes[1], direccion_antes.value, distancia_manzana, distancia_pared, self.score, direccion.value]
         self.individuo.append(cromosoma)
 
-        # 5. update ui and clock
-        if(const.HAY_INTERFAZ):
+        # 10. Actualizar UI y reloj
+        if const.HAY_INTERFAZ:
             self._update_ui()
         self.clock.tick(SPEED)
-        # 6. return game over and score
+
         return game_over, self.score
+
 
     def play_step_manual(self):
         # 1. collect user input
@@ -265,9 +291,8 @@ class SnakeGame:
 
         self.head = Point(x, y)
 
-def jugar(num_individuo):
-
-    game = SnakeGame(const.ANCHO_PANTALLA, const.ALTO_PANTALLA)
+def jugar(num_individuo, matriz_decisiones):
+    game = SnakeGame(matriz_decisiones, const.ANCHO_PANTALLA, const.ALTO_PANTALLA)
 
     start = time.time()
 
@@ -310,4 +335,4 @@ def jugar(num_individuo):
 if __name__ == "__main__":
     print("Iniciando juego...")
     
-    print(jugar(1))
+    print(jugar(1, leer_matriz()))

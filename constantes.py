@@ -1,16 +1,16 @@
 # Parámetros juego
 ANCHO_PANTALLA = 640
 ALTO_PANTALLA  = 480
-VELOCIDAD = 10
+VELOCIDAD = 2
 TAMANNO_BLOQUE = 80 # Sirve bien con 20, 40, 80
-HAY_INTERFAZ = False  #! Poner en True para ver la interfaz
+HAY_INTERFAZ = True  #! Poner en True para ver la interfaz
 JUEGO_MANUAL = False  #! Poner en True para jugar manualmente
 OBJETIVO_MANZANAS = 10  # Número de manzanas a comer para ganar
 
 # Parámetros algoritmo genetico
 CANTIDAD_AGENTES = 20
-CANTIDAD_GENERACIONES = 50
-
+CANTIDAD_GENERACIONES = 3
+PORCENTAJE_SELECCION = 0.2
 TASA_MUTACION = 0.1
 
 # Pesos de cada componente
