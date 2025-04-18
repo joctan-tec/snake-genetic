@@ -3,13 +3,19 @@
 import random
 from collections import namedtuple
 from enum import Enum
-import pprint
+from custom_utils import mostrar_tabla
+import pandas as pd
+
+
+
+
 
 import pygame
 import constantes as const
 from func_geneticos import fitness, distancia_manhattan, leer_matriz
 import numpy as np
 import time
+from SnakeLoopDetector import SnakeLoopDetector
 
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
@@ -40,13 +46,23 @@ SPEED = const.VELOCIDAD
 
 class SnakeGame:
 
-    def __init__(self, matriz_decisiones, w=640, h=480):
+    def __init__(self, matriz_decisiones, juego_id, w=640, h=480):
         self.w = w
         self.h = h
         self.individuo = []
         self.filas = const.ALTO_PANTALLA // const.TAMANNO_BLOQUE
         self.columnas = const.ANCHO_PANTALLA // const.TAMANNO_BLOQUE
         self.matriz_decisiones = matriz_decisiones
+        self.loop_detector = SnakeLoopDetector()
+        self.juego_id = juego_id
+        self.posiciones_manzanas = [
+            Point(2 * const.TAMANNO_BLOQUE, 4 * const.TAMANNO_BLOQUE),
+            Point(1 * const.TAMANNO_BLOQUE, 2 * const.TAMANNO_BLOQUE),
+            Point(3 * const.TAMANNO_BLOQUE, 1 * const.TAMANNO_BLOQUE),
+            Point(4 * const.TAMANNO_BLOQUE, 4 * const.TAMANNO_BLOQUE),
+        ]
+        self.manzana_usada = 0
+
         # init display
 
         if(const.HAY_INTERFAZ):
@@ -59,22 +75,73 @@ class SnakeGame:
         self.direction = Direction.RIGHT
 
         self.head = Point(self.w / 2, self.h / 2)
-        self.snake = [
+        if(const.NO_CUERPO):
+            self.snake = [self.head]
+        else:
+            self.snake = [
             self.head,
             Point(self.head.x - BLOCK_SIZE, self.head.y),
             Point(self.head.x - (2 * BLOCK_SIZE), self.head.y),
-        ]
+            ]
 
         self.score = 0
         self.food = None
         self._place_food()
 
+    def __manzana_en_direcciones(self):
+        # Devuelve una lista de booleanos en el orden: [izquierda, derecha, arriba, abajo]
+        resultado = []
+
+        # IZQUIERDA
+        hay_manzana = False
+        for i in range(1, self.columnas):
+            if self.food == Point(self.head.x - (i * BLOCK_SIZE), self.head.y):
+                hay_manzana = True
+                break
+        resultado.append(hay_manzana)
+
+        # DERECHA
+        hay_manzana = False
+        for i in range(1, self.columnas):
+            if self.food == Point(self.head.x + (i * BLOCK_SIZE), self.head.y):
+                hay_manzana = True
+                break
+        resultado.append(hay_manzana)
+
+        # ARRIBA
+        hay_manzana = False
+        for i in range(1, self.filas):
+            if self.food == Point(self.head.x, self.head.y - (i * BLOCK_SIZE)):
+                hay_manzana = True
+                break
+        resultado.append(hay_manzana)
+
+        # ABAJO
+        hay_manzana = False
+        for i in range(1, self.filas):
+            if self.food == Point(self.head.x, self.head.y + (i * BLOCK_SIZE)):
+                hay_manzana = True
+                break
+        resultado.append(hay_manzana)
+
+        return resultado
+
+
+
     def _place_food(self):
-        x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
-        y = random.randint(0, (self.h - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
-        self.food = Point(x, y)
-        if self.food in self.snake:
-            self._place_food()
+        # Si const.MANZANAS_FIJAS es True, la comida saldrá en posiciones fijas
+        # Si no, la comida saldrá en posiciones aleatorias
+        if const.MANZANAS_FIJAS:
+            if self.manzana_usada > len(self.posiciones_manzanas):
+                self.manzana_usada = 0
+            self.food = self.posiciones_manzanas[self.manzana_usada]
+            self.manzana_usada += 1
+        else:
+            x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
+            y = random.randint(0, (self.h - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
+            self.food = Point(x, y)
+            if self.food in self.snake:
+                self._place_food()
 
     def play_step_automatico(self):
         # 1. Obtener posición y dirección actual
@@ -101,20 +168,43 @@ class SnakeGame:
         distancia_manzana = distancia_manhattan(cabeza, manzana)
 
         # 3. Buscar coincidencia en matriz_decisiones
-        estado_actual = np.array([head_fila, head_columna, self.direction.value, distancia_manzana, distancia_pared])
+        estado_actual = np.array([head_fila, head_columna, self.direction.value, manzana[0], manzana[1], distancia_pared])
         coincidencia = None
-        for fila in self.matriz_decisiones:
-            fila_estado = fila[:5]  # comparar solo los primeros 5 valores
-            if np.array_equal(estado_actual, fila_estado):
-                coincidencia = fila
-                break
+        # Si la matriz_decisiones está vacía, no se puede buscar coincidencias
+        if self.matriz_decisiones.size != 0:
+            
+            matriz = self.matriz_decisiones[:, :6]  # extrae solo los primeros 6 elementos de cada fila
+            coincidencias = np.all(matriz == estado_actual, axis=1)  # compara con estado_actual
 
-        # 4. Elegir dirección basada en coincidencia o aleatoriamente
-        if coincidencia is not None:
-            direccion_elegida_valor = int(coincidencia[6])
-            self.direction = Direction(direccion_elegida_valor)
-            if(const.HAY_INTERFAZ):
-                print(f"encontré coincidencia en la tabla")
+            if np.any(coincidencias):
+                coincidencia = self.matriz_decisiones[coincidencias][0]  # toma la primera coincidencia
+            
+
+
+        # 4. Detectar loop y decidir dirección
+        self.loop_detector.update(cabeza, self.direction)
+        hay_loop = self.loop_detector.is_looping()
+
+        if hay_loop:
+            if const.HAY_INTERFAZ:
+                print("¡Loop detectado! Movimiento aleatorio forzado.")
+            direcciones = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
+            direcciones = [d for d in direcciones if not (
+                (d == Direction.LEFT and self.direction == Direction.RIGHT) or
+                (d == Direction.RIGHT and self.direction == Direction.LEFT) or
+                (d == Direction.UP and self.direction == Direction.DOWN) or
+                (d == Direction.DOWN and self.direction == Direction.UP)
+            )]
+            self.direction = random.choice(direcciones)
+        elif coincidencia is not None:
+            direccion_elegida_valor = int(coincidencia[7])
+            # Validar que no se devuelva
+            if (direccion_elegida_valor == 1 and self.direction == Direction.LEFT) or (direccion_elegida_valor == 2 and self.direction == Direction.RIGHT) or (direccion_elegida_valor == 3 and self.direction == Direction.DOWN) or (direccion_elegida_valor == 4 and self.direction == Direction.UP):
+                pass  # Mantener dirección actual
+            else:
+                self.direction = Direction(direccion_elegida_valor)
+            if const.HAY_INTERFAZ:
+                print("Encontré coincidencia en la tabla")
         else:
             numero_aleatorio = random.randint(0, 100)
             if numero_aleatorio < 25:
@@ -134,48 +224,33 @@ class SnakeGame:
         self._move(self.direction)  # update the head
         self.snake.insert(0, self.head)
 
-        # 6. Recalcular posición/datos después del movimiento
-        head_columna, head_fila = (int(self.head.x), int(self.head.y))
-        head_columna = head_columna // const.TAMANNO_BLOQUE
-        head_fila = head_fila // const.TAMANNO_BLOQUE
-        direccion = self.direction
-        cabeza = (head_fila, head_columna)
-
-        match direccion:
-            case Direction.RIGHT:
-                distancia_pared = self.columnas - head_columna - 1
-            case Direction.LEFT:
-                distancia_pared = head_columna
-            case Direction.UP:
-                distancia_pared = head_fila
-            case Direction.DOWN:
-                distancia_pared = self.filas - head_fila - 1
-
-        distancia_manzana = distancia_manhattan(cabeza, manzana)
-
-        # 7. Revisar colisión
+        # 6. Revisar colisión
         game_over = False
         if self._is_collision():
             game_over = True
             return game_over, self.score
 
-        # 8. Comida
+        # 7. Comida
         if self.head == self.food:
             self.score += 1
             self._place_food()
+            if const.NO_CUERPO:
+                self.snake.pop()  # No permitimos que crezca, quitamos la cola como si no hubiera comido
         else:
             self.snake.pop()
 
-        # 9. Registrar cromosoma
-        cromosoma = [cabeza_antes[0], cabeza_antes[1], direccion_antes.value, distancia_manzana, distancia_pared, self.score, direccion.value]
+        # 8. Registrar cromosoma (puedes agregar flag de loop si quieres analizar después)
+        cromosoma = [cabeza_antes[0], cabeza_antes[1], direccion_antes.value, manzana[0], manzana[1], distancia_pared, self.score, self.direction.value]
         self.individuo.append(cromosoma)
+        # print(f"{self.juego_id} : " ,cromosoma)
 
-        # 10. Actualizar UI y reloj
+        # 9. Actualizar UI y reloj
         if const.HAY_INTERFAZ:
             self._update_ui()
         self.clock.tick(SPEED)
 
         return game_over, self.score
+
 
 
     def play_step_manual(self):
@@ -197,9 +272,10 @@ class SnakeGame:
                 elif event.key == pygame.K_DOWN:
                     self.direction = Direction.DOWN
 
+    
         # 2. move
         self._move(self.direction)  # update the head
-        self.snake.insert(0, self.head)
+        #self.snake.insert(0, self.head)
 
         head_columna, head_fila = (int(self.head.x), int(self.head.y))
         head_columna = head_columna // const.TAMANNO_BLOQUE
@@ -263,6 +339,7 @@ class SnakeGame:
         return False
 
     def _update_ui(self):
+
         self.display.fill(BLACK)
 
         for pt in self.snake:
@@ -292,7 +369,7 @@ class SnakeGame:
         self.head = Point(x, y)
 
 def jugar(num_individuo, matriz_decisiones):
-    game = SnakeGame(matriz_decisiones, const.ANCHO_PANTALLA, const.ALTO_PANTALLA)
+    game = SnakeGame(matriz_decisiones, num_individuo, const.ANCHO_PANTALLA, const.ALTO_PANTALLA)
 
     start = time.time()
 
@@ -310,7 +387,15 @@ def jugar(num_individuo, matriz_decisiones):
             break
 
     individuo = np.array(game.individuo, dtype=int)
-    # Retornar resultados
+    
+    """ df = pd.DataFrame(individuo, columns=["columna", "fila", "direccion antes", "distancia manzana", "manzana izquierda", "manzana derecha", "manzana arriba", "manzana abajo", "distancia pared", "score", "direccion después"])
+    
+    mostrar_tabla(df) """
+    
+    # Verificar si la matriz viene vacia
+    if individuo.size == 0:
+        print("El individuo está vacío")
+        return None
     resultados = [individuo, end - start, fitness(individuo)]
     
     # print(f"Agente {num_individuo} terminó el juego")
@@ -334,5 +419,10 @@ def jugar(num_individuo, matriz_decisiones):
 
 if __name__ == "__main__":
     print("Iniciando juego...")
+    try: 
+        matriz_decisiones = leer_matriz()
+    except Exception as e:
+        print(f"Error al leer la matriz: {e}")
+        matriz_decisiones = np.array([])
+    print(jugar(1, matriz_decisiones))
     
-    print(jugar(1, leer_matriz()))

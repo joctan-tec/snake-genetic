@@ -1,7 +1,24 @@
 import numpy as np
+import pandas as pd
+from custom_utils import mostrar_tabla
+from func_geneticos import leer_matriz
+from tabulate import tabulate
 
-vec1 = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-vec2 = np.array([4,5,8])
+print(leer_matriz().shape)
 
-# Encontrar el indice del array que se busca, si existe, sino devuelve -1
-print(np.where(vec1 == vec2[0]))  # Devuelve el índice de la primera coincidencia
+df = pd.DataFrame(leer_matriz(), columns=["columna", "fila", "direccion antes", "distancia manzana", "manzana izquierda", "manzana derecha", "manzana arriba", "manzana abajo", "distancia pared", "score", "direccion despues"])
+
+# Si el valor de la columna "direccion antes" es 1 cambiarlo a "Derecha", Si es 2, cambiarlo a "Izquierda", Si es 3, cambiarlo a "Arriba", Si es 4, cambiarlo a "Abajo"
+df["direccion antes"] = df["direccion antes"].map({1: "Derecha", 2: "Izquierda", 3: "Arriba", 4: "Abajo"})
+# Si el valor de la columna "direccion despues" es 1 cambiarlo a "Derecha", Si es 2, cambiarlo a "Izquierda", Si es 3, cambiarlo a "Arriba", Si es 4, cambiarlo a "Abajo"
+df["direccion despues"] = df["direccion despues"].map({1: "Derecha", 2: "Izquierda", 3: "Arriba", 4: "Abajo"})
+
+
+print(df.describe())
+
+
+
+
+
+print(tabulate(df, headers='keys', tablefmt='pretty', showindex=False))
+

@@ -3,29 +3,67 @@ import numpy as np
 import h5py
 import random
 
+
+
+import numpy as np
+
 def fitness(individuo):
-    """
-    Calcula la función de fitness de un individuo.
-    La función de fitness es la suma de los valores de los genes del individuo.
-    """
-    # Separar columnas para mayor claridad (opcional)
-    # Variables
-    dist_manzana = individuo[:, 3]
-    dist_pared = individuo[:, 4]
-    score = individuo[:, 5]
+    try:
+        individuo = np.array(individuo)
 
-    n = len(individuo)                     # duración del individuo
-    score_total = np.sum(score)            # total manzanas comidas
-    max_duracion = 100                     # valor que defines tú
+        cabeza_x = individuo[:, 0]
+        cabeza_y = individuo[:, 1]
+        dir_antes = individuo[:, 2]
+        manzana_x = individuo[:, 3]
+        manzana_y = individuo[:, 4]
+        dist_pared = individuo[:, 5]
+        score = individuo[:, 6]
+        dir_despues = individuo[:, 7]
 
-    # Cálculo del fitness
-    fitness = (
-        np.sum(const.ALPHA * score - const.BETA * dist_manzana + const.GAMMA * dist_pared)
-        - const.DELTA * (n / (score_total + 1))
-        - const.EPSILON * (1 - (n / max_duracion))
-    )
+        n = len(individuo)
+        score_total = np.sum(score)
+        max_duracion = 100
 
-    return fitness
+        # Calcular distancia a manzana
+        dist_manzana = np.abs(cabeza_x - manzana_x) + np.abs(cabeza_y - manzana_y)
+
+        # Penalización si la dirección después no se acerca a la manzana
+        penalizacion_ignoradas = 0
+        for i in range(n):
+            dx = manzana_x[i] - cabeza_x[i]
+            dy = manzana_y[i] - cabeza_y[i]
+            direccion = dir_despues[i]
+
+            # Determinar dirección óptima
+            if abs(dx) > abs(dy):  # priorizamos el movimiento horizontal
+                if dx < 0 and direccion != 0:  # izquierda
+                    penalizacion_ignoradas += 1
+                elif dx > 0 and direccion != 1:  # derecha
+                    penalizacion_ignoradas += 1
+            else:
+                if dy < 0 and direccion != 2:  # arriba
+                    penalizacion_ignoradas += 1
+                elif dy > 0 and direccion != 3:  # abajo
+                    penalizacion_ignoradas += 1
+
+        penalizacion_ignoradas *= const.THETA
+
+        # Cálculo final del fitness
+        fitness = (
+            np.sum(const.ALPHA * score - const.BETA * dist_manzana + const.GAMMA * dist_pared)
+            - penalizacion_ignoradas
+            - const.DELTA * (n / (score_total + 1))
+            - const.EPSILON * (1 - (n / max_duracion))
+        )
+
+        return fitness
+
+    except Exception as e:
+        print("Error en el cálculo de fitness:", e)
+        print("Tipo:", type(individuo), "Shape:", np.array(individuo).shape)
+        print("Contenido:\n", individuo)
+        return 0
+
 
 def guardar_matriz(individuo, nombre_archivo="matriz_decision.txt"):
     with h5py.File(nombre_archivo, "w") as f:
@@ -86,10 +124,10 @@ def mutar_movimientos(matriz, tasa_mutacion=0.1):
     filas_a_mutar = random.sample(range(n_filas), n_mutaciones)
 
     for fila in filas_a_mutar:
-        valor_actual = int(matriz_mutada[fila][6])
+        valor_actual = int(matriz_mutada[fila][7])
         opciones = [1, 2, 3, 4]
         opciones.remove(valor_actual)  # evita repetir el mismo valor
-        matriz_mutada[fila][6] = np.int64(random.choice(opciones))
+        matriz_mutada[fila][7] = np.int64(random.choice(opciones))
 
     return matriz_mutada
 
