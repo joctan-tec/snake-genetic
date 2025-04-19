@@ -132,10 +132,12 @@ class SnakeGame:
         # Si const.MANZANAS_FIJAS es True, la comida saldrá en posiciones fijas
         # Si no, la comida saldrá en posiciones aleatorias
         if const.MANZANAS_FIJAS:
-            if self.manzana_usada > len(self.posiciones_manzanas):
+            
+            if self.manzana_usada >= len(self.posiciones_manzanas):
                 self.manzana_usada = 0
             self.food = self.posiciones_manzanas[self.manzana_usada]
             self.manzana_usada += 1
+            
         else:
             x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
             y = random.randint(0, (self.h - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
@@ -226,9 +228,9 @@ class SnakeGame:
 
         # 6. Revisar colisión
         game_over = False
-        if self._is_collision():
+        if self._is_collision(): 
             game_over = True
-            return game_over, self.score
+            
 
         # 7. Comida
         if self.head == self.food:
@@ -380,8 +382,6 @@ def jugar(num_individuo, matriz_decisiones):
         else:
             game_over, score = game.play_step_automatico()
 
-        
-            
         if game_over == True:
             end = time.time()
             break

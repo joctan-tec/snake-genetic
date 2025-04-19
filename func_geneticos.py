@@ -86,6 +86,25 @@ def seleccion_por_ranking(poblacion_ordenada, probs, k=2):
     )
     return seleccionados
 
+def seleccion_torneo(poblacion, k=3, cantidad_seleccionados=None):
+    """
+    poblacion: lista de tuplas (id, movimientos_array, tiempo, fitness)
+    k: número de individuos que compiten en cada torneo
+    cantidad_seleccionados: cantidad de individuos a seleccionar
+    """
+    if cantidad_seleccionados is None:
+        cantidad_seleccionados = len(poblacion)
+
+    seleccionados = []
+
+    for _ in range(cantidad_seleccionados):
+        torneo = random.sample(poblacion, k)
+        ganador = max(torneo, key=lambda x: x[1][2])  # usamos el fitness
+        seleccionados.append(ganador)
+
+    return seleccionados
+
+
 
 def cruce_concatenado(padres):
     secuencias = [padre[1][0] for padre in padres]

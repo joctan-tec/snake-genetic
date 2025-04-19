@@ -2,7 +2,7 @@ from multiprocessing import Pool, TimeoutError
 from copy import deepcopy
 import constantes as const
 from snakepy import jugar
-from func_geneticos import seleccion_por_ranking, cruce_concatenado, guardar_matriz, leer_matriz, fusionar_matrices, mutar_movimientos
+from func_geneticos import seleccion_por_ranking, cruce_concatenado, guardar_matriz, leer_matriz, fusionar_matrices, mutar_movimientos, seleccion_torneo
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -71,7 +71,8 @@ def main():
 
             # Selección
             k = int(N * const.PORCENTAJE_SELECCION)
-            padres = ordenados[:k]  # o seleccion_por_ranking(...)
+            padres = seleccion_torneo(ordenados, k=k)
+            padres = sorted(padres, key=lambda x: x[1][2], reverse=True)
             mejor_fitness_seleccion = padres[0][1][2]
             fitness_promedio_seleccion = sum([x[1][2] for x in padres]) / k
             MEJOR_FITNESS_SELECCION.append(mejor_fitness_seleccion)
