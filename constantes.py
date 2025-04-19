@@ -1,9 +1,9 @@
 # Parámetros juego
 ANCHO_PANTALLA = 640
 ALTO_PANTALLA  = 480
-VELOCIDAD = 3
+VELOCIDAD = 25
 TAMANNO_BLOQUE = 80 # Sirve bien con 20, 40, 80
-HAY_INTERFAZ = True  #! Poner en True para ver la interfaz
+HAY_INTERFAZ = False  #! Poner en True para ver la interfaz
 JUEGO_MANUAL = False  #! Poner en True para jugar manualmente
 NO_CUERPO = True  #! Poner en True para que no crezca el cuerpo
 MANZANAS_FIJAS = True  #! Poner en True para que las manzanas no se muevan
