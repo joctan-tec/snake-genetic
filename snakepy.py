@@ -70,8 +70,11 @@ class SnakeGame:
         self._place_food()
 
     def _place_food(self):
-        x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
-        y = random.randint(0, (self.h - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
+        points = [80,160,240,320]
+        x = random.randint(0, 3)
+        y = random.randint(0, 3)
+        x = points[x]
+        y = points[y]
         self.food = Point(x, y)
         if self.food in self.snake:
             self._place_food()
@@ -83,6 +86,7 @@ class SnakeGame:
         head_fila = head_fila // const.TAMANNO_BLOQUE
         direccion_antes = self.direction
         cabeza_antes = (head_fila, head_columna)
+        food_antes = (self.food.x, self.food.y)
 
         # 2. Calcular distancia a la manzana y distancia a la pared en la dirección actual
         manzana = (int(self.food.y) // const.TAMANNO_BLOQUE, int(self.food.x) // const.TAMANNO_BLOQUE)
@@ -101,21 +105,29 @@ class SnakeGame:
         distancia_manzana = distancia_manhattan(cabeza, manzana)
 
         # 3. Buscar coincidencia en matriz_decisiones
-        estado_actual = np.array([head_fila, head_columna, self.direction.value, distancia_manzana, distancia_pared])
+        estado_actual = np.array([head_fila, head_columna, self.food.x, self.food.y, distancia_manzana, distancia_pared])
+        # Buscar coincidencia en la matriz de decisiones
         coincidencia = None
         for fila in self.matriz_decisiones:
-            fila_estado = fila[:5]  # comparar solo los primeros 5 valores
+            fila_estado = fila[:6]  # comparar solo los primeros 5 valores
             if np.array_equal(estado_actual, fila_estado):
                 coincidencia = fila
                 break
 
+        direccion_random = True
         # 4. Elegir dirección basada en coincidencia o aleatoriamente
         if coincidencia is not None:
-            direccion_elegida_valor = int(coincidencia[6])
-            self.direction = Direction(direccion_elegida_valor)
+            direccion_random = False
+            direccion_elegida_valor = int(coincidencia[-1])
             if(const.HAY_INTERFAZ):
                 print(f"encontré coincidencia en la tabla")
-        else:
+            if direccion_elegida_valor == 1 and self.direction != Direction.LEFT or direccion_elegida_valor == 2 and self.direction != Direction.RIGHT or direccion_elegida_valor == 3 and self.direction != Direction.DOWN or direccion_elegida_valor == 4 and self.direction != Direction.UP:
+                self.direction = Direction(direccion_elegida_valor)
+            else:
+                direccion_random = True
+                if(const.HAY_INTERFAZ):
+                    print("Direccion no valida")
+        if direccion_random:
             numero_aleatorio = random.randint(0, 100)
             if numero_aleatorio < 25:
                 if self.direction != Direction.LEFT:
@@ -167,7 +179,7 @@ class SnakeGame:
             self.snake.pop()
 
         # 9. Registrar cromosoma
-        cromosoma = [cabeza_antes[0], cabeza_antes[1], direccion_antes.value, distancia_manzana, distancia_pared, self.score, direccion.value]
+        cromosoma = [cabeza[0], cabeza[1], self.food.x, self.food.y, distancia_manzana, distancia_pared, self.score, direccion_antes.value, direccion.value]
         self.individuo.append(cromosoma)
 
         # 10. Actualizar UI y reloj
@@ -184,9 +196,7 @@ class SnakeGame:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            
-
-            
+                
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     self.direction = Direction.LEFT
@@ -233,11 +243,11 @@ class SnakeGame:
         if self.head == self.food:
             self.score += 1
             self._place_food()
-        else:
-            self.snake.pop()
+        
+        self.snake.pop()
         
         # 5. Se agrega el score actualizado
-        cromosoma = [distancia_manzana, distancia_pared, self.score, direccion.value]
+        cromosoma = [distancia_manzana, distancia_pared, self.food.x, self.food.y,self.score, direccion.value]
         self.individuo.append(cromosoma)
 
         # 5. update ui and clock

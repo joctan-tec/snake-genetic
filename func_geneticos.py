@@ -10,9 +10,12 @@ def fitness(individuo):
     """
     # Separar columnas para mayor claridad (opcional)
     # Variables
-    dist_manzana = individuo[:, 3]
-    dist_pared = individuo[:, 4]
-    score = individuo[:, 5]
+    # if np.array_equal(individuo, []):
+    #     return 0
+    
+    dist_manzana = individuo[:, 4]
+    dist_pared = individuo[:, 5]
+    score = individuo[:, 6]
 
     n = len(individuo)                     # duración del individuo
     score_total = np.sum(score)            # total manzanas comidas
@@ -21,21 +24,22 @@ def fitness(individuo):
     # Cálculo del fitness
     fitness = (
         np.sum(const.ALPHA * score - const.BETA * dist_manzana + const.GAMMA * dist_pared)
-        - const.DELTA * (n / (score_total + 1))
-        - const.EPSILON * (1 - (n / max_duracion))
     )
 
     return fitness
 
-def guardar_matriz(individuo, nombre_archivo="matriz_decision.txt"):
+def guardar_matriz(individuo, nombre_archivo="matriz_decision_x.txt"):
     with h5py.File(nombre_archivo, "w") as f:
         # Guardar la matriz como un dataset
         f.create_dataset(nombre_archivo, data=individuo)
 
-def leer_matriz(nombre_archivo="matriz_decision.txt"):
-    with h5py.File(nombre_archivo, "r") as f:
-        # Leer el dataset y convertirlo a un array de numpy
-        matriz = np.array(f[nombre_archivo])
+def leer_matriz(nombre_archivo="matriz_decision_x.txt"):
+    try:
+        with h5py.File(nombre_archivo, "r") as f:
+            # Leer el dataset y convertirlo a un array de numpy
+            matriz = np.array(f[nombre_archivo])
+    except:
+        return []
     return matriz
 
 
@@ -61,8 +65,38 @@ def cruce_concatenado(padres):
 
     return np.array(hijo)
 
+def cruce(padres):
+    hijos = []
+
+    # Asegurar que haya una cantidad par
+    if len(padres) % 2 != 0:
+        padres = padres[:-1]
+
+    # Intercambiar la mitad de las secuencias entre los padres
+    for i in range(0, len(padres), 2):
+        padre1 = padres[i][1][0]
+        padre2 = padres[i + 1][1][0]
+
+        # Intercambiar la mitad de las secuencias
+        mitad = len(padre1) // 2
+        mitad2 = len(padre2) // 2
+
+        parte1 = padre1[:mitad]
+        parte2 = padre2[mitad2:]
+        hijo1_crom = np.concatenate((parte1, parte2), axis=0)
+
+        parte1 = padre2[:mitad]
+        parte2 = padre1[mitad2:]
+        hijo2_crom = np.concatenate((parte1, parte2), axis=0)
+
+        hijos += hijo1_crom.tolist()
+        hijos += hijo2_crom.tolist()
+
+    return hijos
+
 
 def fusionar_matrices(matriz_prev, nueva_tabla):
+    matriz_prev = np.array(matriz_prev)
     if matriz_prev.size == 0:
         return nueva_tabla
 
@@ -86,10 +120,10 @@ def mutar_movimientos(matriz, tasa_mutacion=0.1):
     filas_a_mutar = random.sample(range(n_filas), n_mutaciones)
 
     for fila in filas_a_mutar:
-        valor_actual = int(matriz_mutada[fila][6])
+        valor_actual = int(matriz_mutada[fila][-1])
         opciones = [1, 2, 3, 4]
         opciones.remove(valor_actual)  # evita repetir el mismo valor
-        matriz_mutada[fila][6] = np.int64(random.choice(opciones))
+        matriz_mutada[fila][-1] = np.int64(random.choice(opciones))
 
     return matriz_mutada
 
