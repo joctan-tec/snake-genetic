@@ -62,6 +62,7 @@ class SnakeGame:
             Point(4 * const.TAMANNO_BLOQUE, 4 * const.TAMANNO_BLOQUE),
         ]
         self.manzana_usada = 0
+        self.fitness = 0
 
         # init display
 
@@ -231,16 +232,19 @@ class SnakeGame:
         game_over = False
         if self._is_collision(): 
             game_over = True
+            self.fitness -= 10 
             
 
         # 7. Comida
         if self.head == self.food:
             self.score += 1
             self._place_food()
+            self.fitness += 10
             if const.NO_CUERPO:
                 self.snake.pop()  # No permitimos que crezca, quitamos la cola como si no hubiera comido
         else:
             self.snake.pop()
+            self.fitness -= 0.1  # Penaliza por no comer
 
         # 8. Registrar cromosoma 
         """
@@ -413,9 +417,9 @@ def jugar(num_individuo, matriz_decisiones):
     
     # Verificar si la matriz viene vacia
     if individuo.size == 0:
-        print("El individuo está vacío")
+        #print("El individuo está vacío")
         return None
-    resultados = [individuo, end - start, fitness(individuo)]
+    resultados = [individuo, end - start, game.fitness]
     
     # print(f"Agente {num_individuo} terminó el juego")
     pygame.quit()

@@ -10,8 +10,8 @@ MANZANAS_FIJAS = False  #! Poner en True para que las manzanas no se muevan
 OBJETIVO_MANZANAS = 10  # Número de manzanas a comer para ganar
 
 # Parámetros algoritmo genetico
-CANTIDAD_AGENTES = 30
-CANTIDAD_GENERACIONES = 50
+CANTIDAD_AGENTES = 40
+CANTIDAD_GENERACIONES = 500
 PORCENTAJE_SELECCION = 0.3
 TASA_MUTACION = 0.1
 
