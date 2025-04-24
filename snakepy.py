@@ -170,12 +170,12 @@ class SnakeGame:
         distancia_manzana = distancia_manhattan(cabeza, manzana)
 
         # 3. Buscar coincidencia en matriz_decisiones
-        estado_actual = np.array([head_fila, head_columna, self.direction.value, manzana[0], manzana[1], distancia_pared])
+        estado_actual = np.array([head_fila, head_columna, self.direction.value, manzana[0], manzana[1], distancia_manzana, distancia_pared])
         coincidencia = None
         # Si la matriz_decisiones está vacía, no se puede buscar coincidencias
         if self.matriz_decisiones.size != 0:
             
-            matriz = self.matriz_decisiones[:, :6]  # extrae solo los primeros 6 elementos de cada fila
+            matriz = self.matriz_decisiones[:, :7]  # extrae solo los primeros 7 elementos de cada fila
             coincidencias = np.all(matriz == estado_actual, axis=1)  # compara con estado_actual
 
             if np.any(coincidencias):
@@ -199,7 +199,7 @@ class SnakeGame:
             )]
             self.direction = random.choice(direcciones)
         elif coincidencia is not None:
-            direccion_elegida_valor = int(coincidencia[7])
+            direccion_elegida_valor = int(coincidencia[8])
             # Validar que no se devuelva
             if (direccion_elegida_valor == 1 and self.direction == Direction.LEFT) or (direccion_elegida_valor == 2 and self.direction == Direction.RIGHT) or (direccion_elegida_valor == 3 and self.direction == Direction.DOWN) or (direccion_elegida_valor == 4 and self.direction == Direction.UP):
                 pass  # Mantener dirección actual
@@ -225,6 +225,7 @@ class SnakeGame:
         # 5. Mover
         self._move(self.direction)  # update the head
         self.snake.insert(0, self.head)
+        cabeza = (int(self.head.y) // const.TAMANNO_BLOQUE, int(self.head.x) // const.TAMANNO_BLOQUE)
 
         # 6. Revisar colisión
         game_over = False
@@ -241,9 +242,27 @@ class SnakeGame:
         else:
             self.snake.pop()
 
-        # 8. Registrar cromosoma (puedes agregar flag de loop si quieres analizar después)
-        cromosoma = [cabeza_antes[0], cabeza_antes[1], direccion_antes.value, manzana[0], manzana[1], distancia_pared, self.score, self.direction.value]
-        self.individuo.append(cromosoma)
+        # 8. Registrar cromosoma 
+        """
+            Significado de cromosoma:
+            [
+                fila cabeza,
+                columna cabeza,
+                direccion antes,
+                fila manzana,
+                columna manzana,
+                distancia manzana,
+                distancia pared,
+                score,
+                direccion después (accion tomada)
+            ]
+        """
+        distancia_manzana_actual = distancia_manhattan(cabeza, manzana)
+
+        # Si la distancia se reduce, se considera que la acción fue correcta
+        if distancia_manzana_actual < distancia_manzana:
+            cromosoma = [cabeza_antes[0], cabeza_antes[1], direccion_antes.value, manzana[0], manzana[1], distancia_manzana, distancia_pared, self.score, self.direction.value]
+            self.individuo.append(cromosoma)
         # print(f"{self.juego_id} : " ,cromosoma)
 
         # 9. Actualizar UI y reloj

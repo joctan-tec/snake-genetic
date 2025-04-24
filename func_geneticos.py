@@ -143,7 +143,7 @@ def mutar_movimientos(matriz, tasa_mutacion=0.1):
     filas_a_mutar = random.sample(range(n_filas), n_mutaciones)
 
     for fila in filas_a_mutar:
-        valor_actual = int(matriz_mutada[fila][7])
+        valor_actual = int(matriz_mutada[fila][8])
         opciones = [1, 2, 3, 4]
         opciones.remove(valor_actual)  # evita repetir el mismo valor
         matriz_mutada[fila][7] = np.int64(random.choice(opciones))
