@@ -20,4 +20,5 @@ def mostrar_tabla(df):
 
     plt.title("Visualización de Individuo", fontsize=14, weight='bold')
     plt.tight_layout()
+    # Mostrar tabla
     plt.show()

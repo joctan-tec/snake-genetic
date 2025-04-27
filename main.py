@@ -106,6 +106,7 @@ def main():
     plt.title('Evolución del Fitness')
     plt.legend()
     plt.grid()
+    plt.savefig("grafica.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 
