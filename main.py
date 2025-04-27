@@ -12,6 +12,8 @@ MEJOR_FITNESS_GENERACION = []
 FITNESS_PROMEDIO_SELECCION = []
 MEJOR_FITNESS_SELECCION = []
 
+SCORE_PROMEDIO_GENERACION = []
+
 
 def jugar_con_resultado(args):
     agente_id, matriz_decisiones = args
@@ -66,6 +68,10 @@ def main():
             fitness_promedio = sum([x[1][2] for x in ordenados]) / N
             FITNESS_PROMEDIO_GENERACION.append(fitness_promedio)
 
+            # Calculate average score
+            score_promedio = sum([x[1][1] for x in ordenados]) / N
+            SCORE_PROMEDIO_GENERACION.append(score_promedio)
+
             print(f'Mejor fitness de esta generación: {float(mejor_fitness)}')
             print(f'Fitness promedio de esta generación: {float(fitness_promedio)}')
 
@@ -99,6 +105,7 @@ def main():
     # Graficar resultados
     plt.plot(FITNESS_PROMEDIO_GENERACION, label='Promedio Generación')
     plt.plot(MEJOR_FITNESS_GENERACION, label='Mejor Generación')
+    plt.plot(SCORE_PROMEDIO_GENERACION, label='Promedio Score Generación', linestyle='--')
     plt.xlabel('Generación')
     plt.ylabel('Fitness')
     plt.title('Evolución del Fitness')

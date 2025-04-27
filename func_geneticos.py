@@ -139,7 +139,7 @@ def mutar_movimientos(matriz, tasa_mutacion=0.1):
     matriz_mutada = matriz.copy()
     n_filas = len(matriz)
 
-    n_mutaciones = max(1, int(n_filas * tasa_mutacion))
+    n_mutaciones = int(n_filas * tasa_mutacion)
     filas_a_mutar = random.sample(range(n_filas), n_mutaciones)
 
     for fila in filas_a_mutar:
