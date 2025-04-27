@@ -71,7 +71,7 @@ def main():
 
             # Selección
             k = int(N * const.PORCENTAJE_SELECCION)
-            padres = seleccion_torneo(ordenados, k=k)
+            padres = seleccion_torneo(ordenados, cantidad_seleccionados=k)
             padres = sorted(padres, key=lambda x: x[1][2], reverse=True)
             mejor_fitness_seleccion = padres[0][1][2]
             fitness_promedio_seleccion = sum([x[1][2] for x in padres]) / k
@@ -99,8 +99,6 @@ def main():
     # Graficar resultados
     plt.plot(FITNESS_PROMEDIO_GENERACION, label='Promedio Generación')
     plt.plot(MEJOR_FITNESS_GENERACION, label='Mejor Generación')
-    plt.plot(FITNESS_PROMEDIO_SELECCION, label='Promedio Selección')
-    plt.plot(MEJOR_FITNESS_SELECCION, label='Mejor Selección')
     plt.xlabel('Generación')
     plt.ylabel('Fitness')
     plt.title('Evolución del Fitness')
