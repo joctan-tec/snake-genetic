@@ -9,10 +9,10 @@ import matplotlib.pyplot as plt
 FITNESS_PROMEDIO_GENERACION = []
 MEJOR_FITNESS_GENERACION = []
 
-FITNESS_PROMEDIO_SELECCION = []
-MEJOR_FITNESS_SELECCION = []
+
 
 SCORE_PROMEDIO_GENERACION = []
+MEJOR_SCORE_GENERACION = []
 
 
 def jugar_con_resultado(args):
@@ -68,25 +68,24 @@ def main():
             fitness_promedio = sum([x[1][2] for x in ordenados]) / N
             FITNESS_PROMEDIO_GENERACION.append(fitness_promedio)
 
-            # Calculate average score
-            score_promedio = sum([x[1][1] for x in ordenados]) / N
+            todos_los_scores = [movimiento[7] for individuo in ordenados for movimiento in individuo[1][0]]
+            score_promedio = sum(todos_los_scores) / len(todos_los_scores)
+            mejor_score = max(todos_los_scores)
+
             SCORE_PROMEDIO_GENERACION.append(score_promedio)
+            MEJOR_SCORE_GENERACION.append(mejor_score)
+
 
             print(f'Mejor fitness de esta generación: {float(mejor_fitness)}')
             print(f'Fitness promedio de esta generación: {float(fitness_promedio)}')
+
+            print(f'Score promedio de esta generación: {float(score_promedio)}')
+            print(f'Mejor score de esta generación: {float(mejor_score)}')
 
             # Selección
             k = int(N * const.PORCENTAJE_SELECCION)
             padres = seleccion_torneo(ordenados, cantidad_seleccionados=k)
             padres = sorted(padres, key=lambda x: x[1][2], reverse=True)
-            mejor_fitness_seleccion = padres[0][1][2]
-            fitness_promedio_seleccion = sum([x[1][2] for x in padres]) / k
-            MEJOR_FITNESS_SELECCION.append(mejor_fitness_seleccion)
-            FITNESS_PROMEDIO_SELECCION.append(fitness_promedio_seleccion)
-
-            print(f'Mejor fitness de la selección: {float(mejor_fitness_seleccion)}')
-            print(f'Fitness promedio de la selección: {float(fitness_promedio_seleccion)}')
-            print(f'================================================================\n')
 
             # Cruce y mutación
             nueva_tabla = cruce_concatenado(padres)
@@ -102,15 +101,28 @@ def main():
     mejor_individuo = max([x[5] for x in matriz_decisiones])
     print(f"Mejor individuo: {mejor_individuo}")
 
-    # Graficar resultados
-    plt.plot(FITNESS_PROMEDIO_GENERACION, label='Promedio Generación')
-    plt.plot(MEJOR_FITNESS_GENERACION, label='Mejor Generación')
-    plt.plot(SCORE_PROMEDIO_GENERACION, label='Promedio Score Generación', linestyle='--')
-    plt.xlabel('Generación')
-    plt.ylabel('Fitness')
-    plt.title('Evolución del Fitness')
-    plt.legend()
-    plt.grid()
+    # Graficar resultados en dos subplots
+    fig, axs = plt.subplots(2, 1, figsize=(10, 8))
+
+    # Gráfico de Fitness
+    axs[0].plot(FITNESS_PROMEDIO_GENERACION, label='Fitness Promedio', color='blue')
+    axs[0].plot(MEJOR_FITNESS_GENERACION, label='Mejor Fitness', color='orange')
+    axs[0].set_xlabel('Generación')
+    axs[0].set_ylabel('Fitness')
+    axs[0].set_title('Evolución del Fitness')
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # Gráfico de Score
+    axs[1].plot(SCORE_PROMEDIO_GENERACION, label='Score Promedio', color='green')
+    axs[1].plot(MEJOR_SCORE_GENERACION, label='Mejor Score', color='red')
+    axs[1].set_xlabel('Generación')
+    axs[1].set_ylabel('Score')
+    axs[1].set_title('Evolución del Score')
+    axs[1].legend()
+    axs[1].grid(True)
+
+    plt.tight_layout()
     plt.savefig("grafica.png", dpi=300, bbox_inches='tight')
     plt.show()
 
